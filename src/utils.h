@@ -28,4 +28,20 @@ int split(char*** found, char* str, const char* delimiter)
 	return currentSize;
 }
 
+// check if a char pointer/string exists in an array/pointer to a pointer of chars
+int str_exists(const char** arr, const arrsize, const char* match)
+{
+	int result = 0;
+	for (int i = 0; i < arrsize; i++)
+	{
+		if ((*arr) + i == match)
+		{
+			result = 1;
+			break;
+		}
+	}
+
+	return result;
+}
+
 #endif //C_UTILS_H
