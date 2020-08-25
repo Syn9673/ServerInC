@@ -26,19 +26,19 @@ typedef struct
 	int punchLocationX;
 	int punchLocationY;
 	uint32_t tankDataSize;
-	char* tankData;
+	unsigned char* tankData;
 } TankHeader;
 
 // convert the header to a valid tank packet, make sure that you add the data before calling this func.
 int tankheader_parse(unsigned char** bytes, TankHeader* header)
 {
 	const int MAX_SIZE = 60;
-	*bytes = malloc(MAX_SIZE + header->tankDataSize + 1);
+	*bytes = malloc(MAX_SIZE + header->tankDataSize);
 
 	memcpy(*bytes, header, MAX_SIZE);
 	memcpy((*bytes) + MAX_SIZE, header->tankData, header->tankDataSize);
 
-	return MAX_SIZE + header->tankDataSize + 1;
+	return MAX_SIZE + header->tankDataSize;
 };
 
 // set tank data, this will free the data after use
@@ -46,7 +46,6 @@ void tankdata_set(TankHeader* header, int size, unsigned char** data)
 {
 	if (header->tankData == NULL || !header->tankData)
 	{
-		printf("Malloc tankdata\n");
 		header->tankData = malloc(0);
 	}
 

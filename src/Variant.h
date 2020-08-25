@@ -10,47 +10,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum
+void variant_init(TankHeader* header)
 {
-	VARIANT_FLOAT_1 = 0x1,
-	VARIANT_STRING  = 0x2
-} VariantArgTypes;
-
-typedef struct
-{
-	uint8_t count;
-	char* data;
-	int size;
-} Variant;
-
-void variant_init(TankHeader* header, Variant* variant)
-{
-	header->tankDataSize = 1;
+	// malloc them for the arg count
+	header->tankDataSize = 0;
 	header->tankData = malloc(0);
-
-	variant->data = malloc(0);
 }
 
-void variant_insert(TankHeader* header, Variant* variant, char* str)
+void variant_push(TankHeader* header, uint8_t* index, char* str)
 {
-	// do some re-allocation
-	const int SIZE_TO_ADD = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int) + strlen(str);
-	variant->data = realloc(variant->data, variant->size + SIZE_TO_ADD + 1);
+	const int STR_LEN = strlen(str);
+	int SIZE_TO_ADD = sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int) + STR_LEN;
 
-	uint8_t count = ++variant->count;
-	uint8_t index = variant->count - 1;
-	uint8_t type = VARIANT_STRING;
-	int len = strlen(str);
+	if (header->tankDataSize > 0) // -1 for every arg that is not the first cause we did a +1 to remove the bytes from malloc
+		header->tankDataSize -= 1;
 
-	// change arg count
-	memcpy(variant->data, &count, sizeof(uint8_t)); // offset 0
-	memcpy(variant->data + variant->size + sizeof(uint8_t), &index, sizeof(uint8_t)); // offset 1
-	memcpy(variant->data + variant->size + sizeof(uint16_t), &type, sizeof(uint8_t)); // offset 2
-	memcpy(variant->data + variant->size + sizeof(uint16_t) + sizeof(uint8_t), &len, sizeof(int)); // offset 3
-	memcpy(variant->data + variant->size + sizeof(uint16_t) + sizeof(uint8_t) + sizeof(int), str, strlen(str));
+	uint8_t currentIndex = (*index)++;
+	uint8_t type = 0x2;
+	header->tankData = realloc(header->tankData, header->tankDataSize + SIZE_TO_ADD + 1);
 
-	header->tankDataSize += SIZE_TO_ADD;
-	variant->size += SIZE_TO_ADD;
+	// add the necessary data
+	memcpy(header->tankData, index, sizeof(uint8_t));
+	memcpy(header->tankData + header->tankDataSize + sizeof(uint8_t), &currentIndex, sizeof(uint8_t));
+	memcpy(header->tankData + header->tankDataSize + sizeof(uint16_t), &type, sizeof(uint8_t));
+	memcpy(header->tankData + header->tankDataSize + sizeof(uint16_t) + sizeof(uint8_t), &STR_LEN, sizeof(int));
+	memcpy(header->tankData + header->tankDataSize + sizeof(uint16_t) + sizeof(uint8_t) + sizeof(int), str, STR_LEN);
+
+	header->tankDataSize += SIZE_TO_ADD + 1;
 }
 
 #endif //C_VARIANT_H

@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include "src/Utils.h"
 #include "lib/enet/enet.h"
@@ -19,11 +20,11 @@ int main()
 	}
 
 	server = enet_host_create(
-		&address,
-		1024,
-		2,
-		0,
-		0
+			&address,
+			1024,
+			2,
+			0,
+			0
 	);
 
 	server->checksum = enet_crc32;
@@ -43,26 +44,28 @@ int main()
 					printf("User connected, connectID: %i\n", (uint32_t) event.peer->connectID);
 
 					TankHeader header = { 0x4, 0x1, -1, 0x0, 0x8 };
-					Variant variant = { 0x0, NULL, 0x0 };
+					uint8_t index = 0;
 
-					variant_init(&header, &variant); // initialize our variant
-					variant_insert(&header, &variant, "OnConsoleMessage");
-					variant_insert(&header, &variant, "Hello User!");
+					variant_init(&header);
+					variant_push(&header, &index, "OnConsoleMessage");
+					variant_push(&header, &index, "Hello World.");
 
-					unsigned char* tankPacket;
+					unsigned char* tank;
+					int size = tankheader_parse(&tank, &header);
 
-					tankdata_set(&header, variant.size, &variant.data); // add the tank data
-					int size = tankheader_parse(&tankPacket, &header); // convert full tank header + data to bytes
+					ENetPacket* packet = enet_packet_create(
+						tank,
+						size,
+						ENET_PACKET_FLAG_RELIABLE
+					);
 
-					ENetPacket* packet = enet_packet_create(tankPacket, size, ENET_PACKET_FLAG_RELIABLE);
 					enet_peer_send(
 						event.peer,
 						0,
 						packet
 					);
 
-					// free the data
-					free(tankPacket);
+					free(tank);
 					free(header.tankData);
 					break;
 				}

@@ -5,6 +5,9 @@
 #ifndef C_TEXTPACKET_H
 #define C_TEXTPACKET_H
 
+#include <string.h>
+#include <stdlib.h>
+
 typedef struct
 {
 	int type;
